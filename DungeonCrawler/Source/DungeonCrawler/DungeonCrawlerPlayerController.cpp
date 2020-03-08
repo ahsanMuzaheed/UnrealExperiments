@@ -3,7 +3,6 @@
 #include "DungeonCrawlerPlayerController.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Runtime/Engine/Classes/Components/DecalComponent.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
 #include "DungeonCrawlerCharacter.h"
 #include "Engine/World.h"
 
@@ -31,56 +30,18 @@ void ADungeonCrawlerPlayerController::SetupInputComponent()
 
 	InputComponent->BindAction("SetDestination", IE_Pressed, this, &ADungeonCrawlerPlayerController::OnSetDestinationPressed);
 	InputComponent->BindAction("SetDestination", IE_Released, this, &ADungeonCrawlerPlayerController::OnSetDestinationReleased);
-
-	// support touch devices 
-	InputComponent->BindTouch(EInputEvent::IE_Pressed, this, &ADungeonCrawlerPlayerController::MoveToTouchLocation);
-	InputComponent->BindTouch(EInputEvent::IE_Repeat, this, &ADungeonCrawlerPlayerController::MoveToTouchLocation);
-
-	InputComponent->BindAction("ResetVR", IE_Pressed, this, &ADungeonCrawlerPlayerController::OnResetVR);
-}
-
-void ADungeonCrawlerPlayerController::OnResetVR()
-{
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
 void ADungeonCrawlerPlayerController::MoveToMouseCursor()
 {
-	if (UHeadMountedDisplayFunctionLibrary::IsHeadMountedDisplayEnabled())
-	{
-		if (ADungeonCrawlerCharacter* MyPawn = Cast<ADungeonCrawlerCharacter>(GetPawn()))
-		{
-			if (MyPawn->GetCursorToWorld())
-			{
-				UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, MyPawn->GetCursorToWorld()->GetComponentLocation());
-			}
-		}
-	}
-	else
-	{
-		// Trace to see what is under the mouse cursor
-		FHitResult Hit;
-		GetHitResultUnderCursor(ECC_Visibility, false, Hit);
+	// Trace to see what is under the mouse cursor
+	FHitResult Hit;
+	GetHitResultUnderCursor(ECC_Visibility, false, Hit);
 
-		if (Hit.bBlockingHit)
-		{
-			// We hit something, move there
-			SetNewMoveDestination(Hit.ImpactPoint);
-		}
-	}
-}
-
-void ADungeonCrawlerPlayerController::MoveToTouchLocation(const ETouchIndex::Type FingerIndex, const FVector Location)
-{
-	FVector2D ScreenSpaceLocation(Location);
-
-	// Trace to see what is under the touch location
-	FHitResult HitResult;
-	GetHitResultAtScreenPosition(ScreenSpaceLocation, CurrentClickTraceChannel, true, HitResult);
-	if (HitResult.bBlockingHit)
+	if (Hit.bBlockingHit)
 	{
 		// We hit something, move there
-		SetNewMoveDestination(HitResult.ImpactPoint);
+		SetNewMoveDestination(Hit.ImpactPoint);
 	}
 }
 
